@@ -11,6 +11,7 @@ import { format, addDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { Loader2, Scissors, Calendar as CalIcon, Clock, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
+import { cn } from "@/lib/utils";
 
 // Steps constants
 const STEPS = ["Service", "Date", "Time", "Details", "Confirm"];
