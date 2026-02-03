@@ -1,30 +1,31 @@
+import { db } from "./db";
 import {
   services, appointments, admins,
   type Service, type InsertService,
   type Appointment, type InsertAppointment,
   type Admin
 } from "@shared/schema";
-import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 export interface IStorage {
   // Services
   getServices(): Promise<Service[]>;
   getService(id: number): Promise<Service | undefined>;
   createService(service: InsertService): Promise<Service>;
+  clearServices(): Promise<void>;
 
   // Appointments
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
   getAppointments(): Promise<Appointment[]>;
+  getConfirmedAppointmentsByDate(date: string): Promise<Appointment[]>;
   updateAppointmentStatus(id: number, status: "pending" | "confirmed" | "cancelled"): Promise<Appointment | undefined>;
 
   // Admins
   getAdminByUsername(username: string): Promise<Admin | undefined>;
-  createAdmin(admin: InsertUser): Promise<Admin>; // Using InsertUser structure which matches {username, password}
+  createAdmin(admin: {username: string, password: string}): Promise<Admin>;
 }
 
 export class DatabaseStorage implements IStorage {
-  // Services
   async getServices(): Promise<Service[]> {
     return await db.select().from(services);
   }
@@ -39,7 +40,10 @@ export class DatabaseStorage implements IStorage {
     return newService;
   }
 
-  // Appointments
+  async clearServices(): Promise<void> {
+    await db.delete(services);
+  }
+
   async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
     const [newAppointment] = await db.insert(appointments).values(appointment).returning();
     return newAppointment;
@@ -47,6 +51,15 @@ export class DatabaseStorage implements IStorage {
 
   async getAppointments(): Promise<Appointment[]> {
     return await db.select().from(appointments).orderBy(desc(appointments.date), desc(appointments.time));
+  }
+
+  async getConfirmedAppointmentsByDate(date: string): Promise<Appointment[]> {
+    return await db.select().from(appointments).where(
+      and(
+        eq(appointments.date, date),
+        eq(appointments.status, "confirmed")
+      )
+    );
   }
 
   async updateAppointmentStatus(id: number, status: "pending" | "confirmed" | "cancelled"): Promise<Appointment | undefined> {
@@ -58,7 +71,6 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  // Admins
   async getAdminByUsername(username: string): Promise<Admin | undefined> {
     const [admin] = await db.select().from(admins).where(eq(admins.username, username));
     return admin;

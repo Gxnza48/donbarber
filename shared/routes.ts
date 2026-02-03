@@ -31,7 +31,7 @@ export const api = {
         404: errorSchemas.notFound,
       },
     },
-    create: { // Admin only
+    create: {
       method: 'POST' as const,
       path: '/api/services',
       input: insertServiceSchema,
@@ -51,7 +51,7 @@ export const api = {
         400: errorSchemas.validation,
       },
     },
-    list: { // Admin only
+    list: {
       method: 'GET' as const,
       path: '/api/appointments',
       responses: {
@@ -59,7 +59,7 @@ export const api = {
         401: errorSchemas.unauthorized,
       },
     },
-    updateStatus: { // Admin only
+    updateStatus: {
       method: 'PATCH' as const,
       path: '/api/appointments/:id/status',
       input: z.object({ status: z.enum(["pending", "confirmed", "cancelled"]) }),
@@ -67,6 +67,14 @@ export const api = {
         200: z.custom<typeof appointments.$inferSelect>(),
         401: errorSchemas.unauthorized,
         404: errorSchemas.notFound,
+      },
+    },
+    checkAvailability: {
+      method: 'GET' as const,
+      path: '/api/availability',
+      input: z.object({ date: z.string() }),
+      responses: {
+        200: z.array(z.string()), // List of booked times
       },
     }
   },
@@ -91,7 +99,7 @@ export const api = {
       method: 'GET' as const,
       path: '/api/auth/me',
       responses: {
-        200: z.custom<typeof admins.$inferSelect>().nullable(),
+        200: z.object({ username: z.string() }).nullable(),
       },
     }
   }
