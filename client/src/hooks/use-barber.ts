@@ -11,7 +11,7 @@ export function useServices() {
     queryKey: [api.services.list.path],
     queryFn: async () => {
       const res = await fetch(api.services.list.path);
-      if (!res.ok) throw new Error("Failed to fetch services");
+      if (!res.ok) throw new Error("Error al obtener los servicios");
       return api.services.list.responses[200].parse(await res.json());
     },
   });
@@ -20,6 +20,19 @@ export function useServices() {
 // ==========================================
 // APPOINTMENT HOOKS
 // ==========================================
+
+export function useAvailability(date: string) {
+  return useQuery({
+    queryKey: [api.appointments.checkAvailability.path, date],
+    queryFn: async () => {
+      if (!date) return [];
+      const res = await fetch(`${api.appointments.checkAvailability.path}?date=${date}`);
+      if (!res.ok) throw new Error("Error al obtener disponibilidad");
+      return api.appointments.checkAvailability.responses[200].parse(await res.json());
+    },
+    enabled: !!date,
+  });
+}
 
 export function useCreateAppointment() {
   const { toast } = useToast();
@@ -37,13 +50,13 @@ export function useCreateAppointment() {
           const error = api.appointments.create.responses[400].parse(await res.json());
           throw new Error(error.message);
         }
-        throw new Error("Failed to create appointment");
+        throw new Error("Error al crear la reserva");
       }
       return api.appointments.create.responses[201].parse(await res.json());
     },
     onError: (error) => {
       toast({
-        title: "Booking Failed",
+        title: "Error en la reserva",
         description: error.message,
         variant: "destructive",
       });
@@ -57,8 +70,8 @@ export function useAppointments() {
     queryFn: async () => {
       const res = await fetch(api.appointments.list.path);
       if (!res.ok) {
-        if (res.status === 401) throw new Error("Unauthorized");
-        throw new Error("Failed to fetch appointments");
+        if (res.status === 401) throw new Error("No autorizado");
+        throw new Error("Error al obtener los turnos");
       }
       return api.appointments.list.responses[200].parse(await res.json());
     },
@@ -78,15 +91,15 @@ export function useUpdateAppointmentStatus() {
         body: JSON.stringify({ status }),
       });
 
-      if (!res.ok) throw new Error("Failed to update status");
+      if (!res.ok) throw new Error("Error al actualizar el estado");
       return api.appointments.updateStatus.responses[200].parse(await res.json());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.appointments.list.path] });
-      toast({ title: "Status Updated", description: "Appointment status changed successfully." });
+      toast({ title: "Estado Actualizado", description: "El estado del turno se actualizó correctamente." });
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to update status.", variant: "destructive" });
+      toast({ title: "Error", description: "No se pudo actualizar el estado.", variant: "destructive" });
     }
   });
 }

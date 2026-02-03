@@ -72,9 +72,8 @@ export const api = {
     checkAvailability: {
       method: 'GET' as const,
       path: '/api/availability',
-      input: z.object({ date: z.string() }),
       responses: {
-        200: z.array(z.string()), // List of booked times
+        200: z.array(z.string()),
       },
     }
   },
@@ -102,6 +101,9 @@ export const api = {
         200: z.object({ username: z.string() }).nullable(),
       },
     }
+  },
+  availability: {
+    path: '/api/availability'
   }
 };
 
