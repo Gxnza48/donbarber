@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
-import { format, addDays } from "date-fns";
+import { format, addDays, isSameDay, isAfter, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import { Loader2, Scissors, Calendar as CalIcon, Clock, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
@@ -198,7 +198,12 @@ export default function Home() {
                         setSelectedDate(date);
                         if (date) handleNext();
                       }}
-                      disabled={(date) => date < new Date() || date < addDays(new Date(), -1)}
+                      locale={es}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today;
+                      }}
                       className="rounded-xl border border-border shadow-sm bg-background p-6"
                     />
                   </div>
@@ -207,23 +212,31 @@ export default function Home() {
                 {/* STEP 3: Time */}
                 {currentStep === 2 && (
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                    {timeSlots.map((time) => (
-                      <button
-                        key={time}
-                        onClick={() => {
-                          setSelectedTime(time);
-                          handleNext();
-                        }}
-                        className={cn(
-                          "py-3 px-2 rounded-lg text-sm font-semibold border transition-all",
-                          selectedTime === time
-                            ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/20"
-                            : "bg-background border-border hover:border-primary/50 hover:bg-muted"
-                        )}
-                      >
-                        {time}
-                      </button>
-                    ))}
+                    {timeSlots
+                      .filter(time => {
+                        if (!selectedDate || !isSameDay(selectedDate, new Date())) return true;
+                        const [hours, minutes] = time.split(":").map(Number);
+                        const slotTime = new Date();
+                        slotTime.setHours(hours, minutes, 0, 0);
+                        return slotTime > new Date();
+                      })
+                      .map((time) => (
+                        <button
+                          key={time}
+                          onClick={() => {
+                            setSelectedTime(time);
+                            handleNext();
+                          }}
+                          className={cn(
+                            "py-3 px-2 rounded-lg text-sm font-semibold border transition-all",
+                            selectedTime === time
+                              ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/20"
+                              : "bg-background border-border hover:border-primary/50 hover:bg-muted"
+                          )}
+                        >
+                          {time}
+                        </button>
+                      ))}
                   </div>
                 )}
 
@@ -284,7 +297,7 @@ export default function Home() {
                             <CalIcon className="w-5 h-5 text-muted-foreground" />
                             <div>
                               <h4 className="text-sm font-medium text-muted-foreground">Fecha</h4>
-                              <p className="font-semibold">{selectedDate && format(selectedDate, "MMMM do, yyyy")}</p>
+                              <p className="font-semibold">{selectedDate && format(selectedDate, "d 'de' MMMM, yyyy", { locale: es })}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
