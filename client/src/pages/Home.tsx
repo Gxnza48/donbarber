@@ -327,7 +327,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="container mx-auto px-4 mt-20 text-center text-muted-foreground text-sm">
-        <p>© 2024 El Don Barber Shop. Todos los derechos reservados.</p>
+        <p>© 2026 El Don Barber Shop. Desarrollado por Gonzalo Bonadeo.</p>
       </footer>
     </div>
   );
