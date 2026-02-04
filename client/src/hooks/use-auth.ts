@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@shared/routes";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { z } from "zod";
 
-type LoginInput = z.infer<typeof api.auth.login.input>;
+type LoginInput = {
+  username: string;
+  password: string;
+};
 
 export function useAuth() {
   const { toast } = useToast();
@@ -12,52 +14,54 @@ export function useAuth() {
   const queryClient = useQueryClient();
 
   const { data: user, isLoading } = useQuery({
-    queryKey: [api.auth.me.path],
+    queryKey: ["auth-user"],
     queryFn: async () => {
-      const res = await fetch(api.auth.me.path);
-      if (res.status === 401) return null;
-      if (!res.ok) throw new Error("Failed to fetch user");
-      return api.auth.me.responses[200].parse(await res.json());
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
     },
   });
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginInput) => {
-      const res = await fetch(api.auth.login.path, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
+      // Si el usuario ya puso el mail completo, lo usamos. Si no, le agregamos el dominio por defecto.
+      const email = credentials.username.includes("@")
+        ? credentials.username
+        : `${credentials.username}@barbershop.local`;
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: credentials.password,
       });
 
-      if (!res.ok) {
-        if (res.status === 401) throw new Error("Invalid username or password");
-        throw new Error("Login failed");
+      if (error) {
+        console.error("Error Auth Supabase:", error);
+        throw new Error(error.message);
       }
-      return api.auth.login.responses[200].parse(await res.json());
+      return data.user;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
-      toast({ title: "Welcome back", description: "Successfully logged in to admin panel." });
+      queryClient.invalidateQueries({ queryKey: ["auth-user"] });
+      toast({ title: "Bienvenido", description: "Sesión iniciada correctamente." });
     },
     onError: (error) => {
-      toast({ title: "Login Failed", description: error.message, variant: "destructive" });
+      toast({ title: "Error de acceso", description: error.message, variant: "destructive" });
     },
   });
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(api.auth.logout.path, { method: "POST" });
-      if (!res.ok) throw new Error("Logout failed");
+      const { error } = await supabase.auth.signOut();
+      if (error) throw new Error("Error al cerrar sesión");
     },
     onSuccess: () => {
-      queryClient.setQueryData([api.auth.me.path], null);
+      queryClient.setQueryData(["auth-user"], null);
       setLocation("/admin/login");
-      toast({ title: "Logged out", description: "See you next time." });
+      toast({ title: "Sesión cerrada", description: "Hasta pronto." });
     },
   });
 
   return {
-    user,
+    user: user ? { username: user.email?.split("@")[0] || "admin" } : null,
     isLoading,
     login: loginMutation.mutate,
     logout: logoutMutation.mutate,

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Service } from "@shared/schema";
+import type { Service } from "@/lib/database.types";
 import { Check } from "lucide-react";
 
 interface ServiceCardProps {
@@ -14,8 +14,8 @@ export function ServiceCard({ service, selected, onSelect }: ServiceCardProps) {
       onClick={() => onSelect(service)}
       className={cn(
         "relative group cursor-pointer overflow-hidden rounded-xl border-2 transition-all duration-300",
-        selected 
-          ? "border-primary bg-primary/5 shadow-lg shadow-primary/10" 
+        selected
+          ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
           : "border-border bg-card hover:border-primary/50 hover:shadow-md"
       )}
     >
@@ -33,21 +33,21 @@ export function ServiceCard({ service, selected, onSelect }: ServiceCardProps) {
             </div>
           )}
         </div>
-        
+
         <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
           {service.description}
         </p>
 
         <div className="flex items-center justify-between mt-auto">
           <span className="text-sm font-medium text-muted-foreground">
-            {service.duration} mins
+            {service.duration} min
           </span>
           <span className="text-lg font-bold text-foreground">
             $ {service.price.toLocaleString("es-AR")}
           </span>
         </div>
       </div>
-      
+
       {/* Visual flair - decorative gradient line */}
       <div className={cn(
         "absolute bottom-0 left-0 h-1 w-full bg-primary transition-transform duration-300 origin-left",

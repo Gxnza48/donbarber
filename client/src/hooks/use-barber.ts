@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, type InsertAppointment } from "@shared/routes";
+import { supabase } from "@/lib/supabase";
+import type { InsertAppointment } from "@/lib/database.types";
 import { useToast } from "@/hooks/use-toast";
 
 // ==========================================
@@ -8,12 +9,95 @@ import { useToast } from "@/hooks/use-toast";
 
 export function useServices() {
   return useQuery({
-    queryKey: [api.services.list.path],
+    queryKey: ["services"],
     queryFn: async () => {
-      const res = await fetch(api.services.list.path);
-      if (!res.ok) throw new Error("Error al obtener los servicios");
-      return api.services.list.responses[200].parse(await res.json());
+      const { data, error } = await supabase
+        .from("services")
+        .select("*")
+        .order("id");
+
+      if (error) {
+        console.error("Error al cargar servicios de Supabase:", error);
+        throw new Error("Error al obtener los servicios: " + error.message);
+      }
+      return data;
     },
+  });
+}
+
+export function useCreateService() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (newService: { name: string; description: string; price: number; duration: number; image_url?: string }) => {
+      const { data, error } = await supabase
+        .from("services")
+        .insert(newService)
+        .select()
+        .maybeSingle();
+
+      if (error) throw new Error(error.message);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+      toast({ title: "Servicio Creado", description: "El servicio se agregó correctamente." });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
+}
+
+export function useUpdateService() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, ...update }: { id: number; name?: string; description?: string; price?: number; duration?: number; image_url?: string }) => {
+      const { data, error } = await supabase
+        .from("services")
+        .update(update)
+        .eq("id", id)
+        .select()
+        .maybeSingle();
+
+      if (error) throw new Error(`Error BD: ${error.message}`);
+      if (!data) throw new Error("No se pudo encontrar el servicio. Verificá los permisos de Supabase.");
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+      toast({ title: "Servicio Actualizado", description: "Los cambios se guardaron correctamente." });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
+}
+
+export function useDeleteService() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase
+        .from("services")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+      toast({ title: "Servicio Eliminado", description: "El servicio se eliminó de la lista." });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: "No se pudo eliminar el servicio. Puede que tenga turnos asociados.", variant: "destructive" });
+    }
   });
 }
 
@@ -23,12 +107,18 @@ export function useServices() {
 
 export function useAvailability(date: string) {
   return useQuery({
-    queryKey: [api.appointments.checkAvailability.path, date],
+    queryKey: ["availability", date],
     queryFn: async () => {
       if (!date) return [];
-      const res = await fetch(`${api.appointments.checkAvailability.path}?date=${date}`);
-      if (!res.ok) throw new Error("Error al obtener disponibilidad");
-      return api.appointments.checkAvailability.responses[200].parse(await res.json());
+
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("time")
+        .eq("date", date)
+        .neq("status", "cancelled");
+
+      if (error) throw new Error("Error al obtener disponibilidad");
+      return data?.map(a => a.time) ?? [];
     },
     enabled: !!date,
   });
@@ -36,23 +126,41 @@ export function useAvailability(date: string) {
 
 export function useCreateAppointment() {
   const { toast } = useToast();
-  
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (data: InsertAppointment) => {
-      const res = await fetch(api.appointments.create.path, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      // Verificar disponibilidad primero
+      const { data: existing } = await supabase
+        .from("appointments")
+        .select("id")
+        .eq("date", data.date)
+        .eq("time", data.time)
+        .neq("status", "cancelled")
+        .maybeSingle();
 
-      if (!res.ok) {
-        if (res.status === 400) {
-          const error = api.appointments.create.responses[400].parse(await res.json());
-          throw new Error(error.message);
-        }
-        throw new Error("Error al crear la reserva");
+      if (existing) {
+        throw new Error("Este horario ya ha sido reservado");
       }
-      return api.appointments.create.responses[201].parse(await res.json());
+
+      const { data: newAppointment, error } = await supabase
+        .from("appointments")
+        .insert({
+          client_name: data.client_name,
+          client_whatsapp: data.client_whatsapp,
+          service_id: data.service_id,
+          date: data.date,
+          time: data.time,
+          status: "pending"
+        })
+        .select()
+        .single();
+
+      if (error) throw new Error("Error al crear la reserva");
+      return newAppointment;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["availability"] });
     },
     onError: (error) => {
       toast({
@@ -66,16 +174,17 @@ export function useCreateAppointment() {
 
 export function useAppointments() {
   return useQuery({
-    queryKey: [api.appointments.list.path],
+    queryKey: ["appointments"],
     queryFn: async () => {
-      const res = await fetch(api.appointments.list.path);
-      if (!res.ok) {
-        if (res.status === 401) throw new Error("No autorizado");
-        throw new Error("Error al obtener los turnos");
-      }
-      return api.appointments.list.responses[200].parse(await res.json());
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("*")
+        .order("date", { ascending: false })
+        .order("time", { ascending: false });
+
+      if (error) throw new Error("Error al obtener los turnos");
+      return data;
     },
-    retry: false,
   });
 }
 
@@ -85,17 +194,18 @@ export function useUpdateAppointmentStatus() {
 
   return useMutation({
     mutationFn: async ({ id, status }: { id: number; status: "confirmed" | "cancelled" }) => {
-      const res = await fetch(api.appointments.updateStatus.path.replace(":id", String(id)), {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
+      const { data, error } = await supabase
+        .from("appointments")
+        .update({ status })
+        .eq("id", id)
+        .select()
+        .maybeSingle();
 
-      if (!res.ok) throw new Error("Error al actualizar el estado");
-      return api.appointments.updateStatus.responses[200].parse(await res.json());
+      if (error) throw new Error("Error al actualizar el estado");
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.appointments.list.path] });
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
       toast({ title: "Estado Actualizado", description: "El estado del turno se actualizó correctamente." });
     },
     onError: () => {

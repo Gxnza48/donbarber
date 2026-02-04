@@ -14,11 +14,11 @@ import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 
 // Steps constants
-const STEPS = ["Service", "Date", "Time", "Details", "Confirm"];
+const STEPS = ["Servicio", "Fecha", "Hora", "Detalles", "Confirmar"];
 
 export default function Home() {
   const [currentStep, setCurrentStep] = useState(0);
-  
+
   // Booking State
   const [selectedService, setSelectedService] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -47,14 +47,14 @@ export default function Home() {
 
   const handleBook = async () => {
     if (!selectedService || !selectedDate || !selectedTime) return;
-    
+
     try {
       await createAppointment.mutateAsync({
-        serviceId: selectedService.id,
+        service_id: selectedService.id,
         date: format(selectedDate, "yyyy-MM-dd"),
         time: selectedTime,
-        clientName: clientDetails.name,
-        clientWhatsapp: clientDetails.whatsapp,
+        client_name: clientDetails.name,
+        client_whatsapp: clientDetails.whatsapp,
       });
       setIsSuccess(true);
     } catch (error) {
@@ -65,7 +65,7 @@ export default function Home() {
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="max-w-md w-full text-center space-y-6"
@@ -73,15 +73,15 @@ export default function Home() {
           <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-10 h-10" />
           </div>
-          <h1 className="text-3xl font-display font-bold text-foreground">Booking Confirmed!</h1>
+          <h1 className="text-3xl font-display font-bold text-foreground">¡Reserva Confirmada!</h1>
           <p className="text-muted-foreground">
-            Thank you, {clientDetails.name}. Your appointment for {selectedService?.name} is set for {selectedDate && format(selectedDate, "MMMM do", { locale: es })} at {selectedTime}.
+            Gracias, {clientDetails.name}. Tu turno para {selectedService?.name} está agendado para el {selectedDate && format(selectedDate, "d 'de' MMMM", { locale: es })} a las {selectedTime}.
           </p>
-          <Button 
-            className="w-full h-12 text-lg mt-8" 
+          <Button
+            className="w-full h-12 text-lg mt-8"
             onClick={() => window.location.reload()}
           >
-            Book Another
+            Reservar Otro Turno
           </Button>
         </motion.div>
       </div>
@@ -92,67 +92,67 @@ export default function Home() {
     <div className="min-h-screen bg-background text-foreground pb-20">
       {/* Hero Section */}
       <header className="relative bg-black text-white py-24 overflow-hidden">
-         {/* barber shop interior vintage dark luxury */}
+        {/* barber shop interior vintage dark luxury */}
         <div className="absolute inset-0 z-0 opacity-40">
-           <img 
-            src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&q=80" 
-            alt="Barber Shop Interior" 
+          <img
+            src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&q=80"
+            alt="Barber Shop Interior"
             className="w-full h-full object-cover"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent z-10" />
-        
+
         <div className="relative z-20 container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h1 className="text-5xl md:text-7xl font-display font-bold mb-4 tracking-tight">
-              El Don <span className="text-primary">Barber Shop</span>
+            <h1 className="text-4xl md:text-6xl font-display font-medium mb-4 tracking-tight">
+              El Don <span className="text-primary font-bold">Barber Shop</span>
             </h1>
-            <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto font-light">
-              Premium cuts, classic shaves, and a timeless experience.
+            <p className="text-base md:text-lg text-gray-400 max-w-xl mx-auto font-light leading-relaxed">
+              Cortes de precisión y estética masculina moderna. Reserva tu espacio en minutos.
             </p>
           </motion.div>
         </div>
-        
-        {/* Admin Link (Hidden-ish) */}
-        <div className="absolute top-4 right-4 z-30">
-          <Link href="/admin/login" className="text-xs text-white/30 hover:text-white transition-colors">Staff Login</Link>
+
+        {/* Admin Link (Minimally visible) */}
+        <div className="absolute top-6 right-6 z-30 opacity-20 hover:opacity-100 transition-opacity">
+          <Link href="/admin/login" className="text-[10px] uppercase tracking-widest text-white">Staff Only</Link>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 -mt-10 relative z-30">
-        <div className="bg-card border border-border/50 shadow-xl rounded-2xl overflow-hidden min-h-[600px]">
+      <main className="container mx-auto px-4 -mt-12 relative z-30 pb-20">
+        <div className="bg-card/50 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden min-h-[600px]">
           {/* Progress Bar */}
-          <div className="bg-muted h-1.5 w-full">
-            <motion.div 
+          <div className="bg-muted/30 h-1 w-full">
+            <motion.div
               className="h-full bg-primary"
               initial={{ width: "0%" }}
               animate={{ width: `${((currentStep + 1) / 5) * 100}%` }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.5, ease: "circOut" }}
             />
           </div>
 
-          <div className="p-6 md:p-10">
+          <div className="p-8 md:p-12">
             {/* Step Header */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
               <div>
-                <p className="text-sm font-medium text-primary uppercase tracking-wider mb-1">Step {currentStep + 1} of 5</p>
-                <h2 className="text-2xl md:text-3xl font-display font-bold">
-                  {STEPS[currentStep] === "Service" && "Select a Service"}
-                  {STEPS[currentStep] === "Date" && "Choose a Date"}
-                  {STEPS[currentStep] === "Time" && "Pick a Time"}
-                  {STEPS[currentStep] === "Details" && "Your Information"}
-                  {STEPS[currentStep] === "Confirm" && "Confirm Appointment"}
+                <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-2">Paso {currentStep + 1} de 5</p>
+                <h2 className="text-3xl md:text-4xl font-display font-medium tracking-tight">
+                  {currentStep === 0 && "Elegí un Servicio"}
+                  {currentStep === 1 && "Elegí una Fecha"}
+                  {currentStep === 2 && "Elegí un Horario"}
+                  {currentStep === 3 && "Tus Datos"}
+                  {currentStep === 4 && "Confirmar Reserva"}
                 </h2>
               </div>
-              
+
               {currentStep > 0 && (
                 <Button variant="outline" size="sm" onClick={handleBack} className="gap-2">
-                  <ChevronLeft className="w-4 h-4" /> Back
+                  <ChevronLeft className="w-4 h-4" /> Volver
                 </Button>
               )}
             </div>
@@ -196,7 +196,7 @@ export default function Home() {
                       selected={selectedDate}
                       onSelect={(date) => {
                         setSelectedDate(date);
-                        if(date) handleNext();
+                        if (date) handleNext();
                       }}
                       disabled={(date) => date < new Date() || date < addDays(new Date(), -1)}
                       className="rounded-xl border border-border shadow-sm bg-background p-6"
@@ -231,34 +231,34 @@ export default function Home() {
                 {currentStep === 3 && (
                   <div className="max-w-md mx-auto space-y-6 pt-8">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
+                      <Label htmlFor="name">Nombre Completo</Label>
                       <Input
                         id="name"
-                        placeholder="John Doe"
+                        placeholder="Juan Pérez"
                         value={clientDetails.name}
                         onChange={(e) => setClientDetails({ ...clientDetails, name: e.target.value })}
                         className="h-12 text-lg"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="whatsapp">WhatsApp Number</Label>
+                      <Label htmlFor="whatsapp">Número de WhatsApp</Label>
                       <Input
                         id="whatsapp"
-                        placeholder="e.g. 11 1234 5678"
+                        placeholder="Ej: 11 1234 5678"
                         type="tel"
                         value={clientDetails.whatsapp}
                         onChange={(e) => setClientDetails({ ...clientDetails, whatsapp: e.target.value })}
                         className="h-12 text-lg"
                       />
-                      <p className="text-xs text-muted-foreground">We'll send your confirmation here.</p>
+                      <p className="text-xs text-muted-foreground">Te enviaremos la confirmación aquí.</p>
                     </div>
-                    
-                    <Button 
+
+                    <Button
                       className="w-full h-12 text-lg mt-8 font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
                       onClick={handleNext}
                       disabled={!clientDetails.name || !clientDetails.whatsapp}
                     >
-                      Review Booking <ChevronRight className="w-5 h-5 ml-1" />
+                      Revisar Turno <ChevronRight className="w-5 h-5 ml-1" />
                     </Button>
                   </div>
                 )}
@@ -273,7 +273,7 @@ export default function Home() {
                             <Scissors className="w-6 h-6" />
                           </div>
                           <div>
-                            <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Service</h4>
+                            <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Servicio</h4>
                             <p className="text-xl font-bold font-display">{selectedService?.name}</p>
                             <p className="text-primary font-medium mt-1">$ {selectedService?.price.toLocaleString("es-AR")}</p>
                           </div>
@@ -283,38 +283,38 @@ export default function Home() {
                           <div className="flex items-center gap-3">
                             <CalIcon className="w-5 h-5 text-muted-foreground" />
                             <div>
-                              <h4 className="text-sm font-medium text-muted-foreground">Date</h4>
+                              <h4 className="text-sm font-medium text-muted-foreground">Fecha</h4>
                               <p className="font-semibold">{selectedDate && format(selectedDate, "MMMM do, yyyy")}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <Clock className="w-5 h-5 text-muted-foreground" />
                             <div>
-                              <h4 className="text-sm font-medium text-muted-foreground">Time</h4>
+                              <h4 className="text-sm font-medium text-muted-foreground">Hora</h4>
                               <p className="font-semibold">{selectedTime}</p>
                             </div>
                           </div>
                         </div>
 
                         <div className="pt-2">
-                          <h4 className="text-sm font-medium text-muted-foreground mb-1">Client</h4>
+                          <h4 className="text-sm font-medium text-muted-foreground mb-1">Cliente</h4>
                           <p className="font-semibold text-lg">{clientDetails.name}</p>
                           <p className="text-muted-foreground">{clientDetails.whatsapp}</p>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Button 
+                    <Button
                       className="w-full h-14 text-lg mt-8 font-bold bg-primary hover:bg-primary/90 shadow-xl shadow-primary/25"
                       onClick={handleBook}
                       disabled={createAppointment.isPending}
                     >
                       {createAppointment.isPending ? (
                         <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Confirming...
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Confirmando...
                         </>
                       ) : (
-                        "Confirm Appointment"
+                        "Confirmar Turno"
                       )}
                     </Button>
                   </div>
@@ -327,7 +327,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="container mx-auto px-4 mt-20 text-center text-muted-foreground text-sm">
-        <p>© 2024 El Don Barber Shop. All rights reserved.</p>
+        <p>© 2024 El Don Barber Shop. Todos los derechos reservados.</p>
       </footer>
     </div>
   );

@@ -1,16 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Elegant Gold & Black Palette */
-  --font-display: 'Playfair Display', serif;
-  --font-body: 'Inter', sans-serif;
+  /* Minimalist & Modern Palette */
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Outfit', sans-serif;
 
   --background: 0 0% 100%;
-  --foreground: 0 0% 10%;
+  --foreground: 240 10% 3.9%;
 
   /* Premium Gold Primary */
   --primary: 43 74% 49%;        /* #DAA520 Golden Rod approx */
