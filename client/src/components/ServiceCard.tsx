@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import type { Service } from "@/lib/database.types";
-import { Check } from "lucide-react";
+import { Check, Clock } from "lucide-react";
 
 interface ServiceCardProps {
   service: Service;
@@ -13,44 +13,55 @@ export function ServiceCard({ service, selected, onSelect }: ServiceCardProps) {
     <div
       onClick={() => onSelect(service)}
       className={cn(
-        "relative group cursor-pointer overflow-hidden rounded-xl border-2 transition-all duration-300",
+        "relative group cursor-pointer overflow-hidden rounded-2xl border-2 transition-all duration-300 active:scale-[0.98]",
         selected
-          ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-          : "border-border bg-card hover:border-primary/50 hover:shadow-md"
+          ? "border-primary bg-primary/8 shadow-[0_0_20px_hsl(80_100%_44%/0.25)]"
+          : "border-border/60 bg-card hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10"
       )}
     >
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-4">
+      {/* Accent top bar */}
+      <div className={cn(
+        "h-[3px] w-full bg-primary transition-all duration-300",
+        selected ? "opacity-100" : "opacity-0 group-hover:opacity-60"
+      )} />
+
+      <div className="p-5">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-3">
           <h3 className={cn(
-            "text-xl font-bold font-display transition-colors",
-            selected ? "text-primary" : "text-foreground group-hover:text-primary/80"
+            "text-xl font-display leading-none transition-colors",
+            selected ? "text-primary" : "text-foreground group-hover:text-primary"
           )}>
             {service.name}
           </h3>
           {selected && (
-            <div className="bg-primary text-primary-foreground rounded-full p-1 animate-in fade-in zoom-in duration-200">
-              <Check className="w-4 h-4" />
+            <div className="shrink-0 ml-2 bg-primary text-black rounded-full p-1 animate-in fade-in zoom-in duration-200">
+              <Check className="w-3.5 h-3.5" />
             </div>
           )}
         </div>
 
-        <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+        <p className="text-muted-foreground text-xs leading-relaxed mb-5 line-clamp-2">
           {service.description}
         </p>
 
-        <div className="flex items-center justify-between mt-auto">
-          <span className="text-sm font-medium text-muted-foreground">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1 text-xs text-muted-foreground font-medium">
+            <Clock className="w-3 h-3" />
             {service.duration} min
           </span>
-          <span className="text-lg font-bold text-foreground">
+          <span className={cn(
+            "text-lg font-bold transition-colors",
+            selected ? "text-primary text-glow" : "text-foreground group-hover:text-primary"
+          )}>
             $ {service.price.toLocaleString("es-AR")}
           </span>
         </div>
       </div>
 
-      {/* Visual flair - decorative gradient line */}
+      {/* Bottom glow line */}
       <div className={cn(
-        "absolute bottom-0 left-0 h-1 w-full bg-primary transition-transform duration-300 origin-left",
+        "absolute bottom-0 left-0 h-[2px] w-full bg-primary shadow-[0_0_8px_hsl(80_100%_44%/0.8)] transition-transform duration-300 origin-left",
         selected ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
       )} />
     </div>

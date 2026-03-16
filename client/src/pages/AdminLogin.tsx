@@ -2,10 +2,9 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Loader2, User } from "lucide-react";
+import { Loader2, Scissors } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
@@ -26,54 +25,88 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-      <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
-         <img 
-          src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&q=80" 
-          alt="Barber Background" 
-          className="w-full h-full object-cover grayscale"
-        />
-      </div>
+    <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
 
-      <Card className="w-full max-w-md bg-zinc-900 border-zinc-800 text-zinc-100 z-10 shadow-2xl">
-        <CardHeader className="text-center space-y-4 pb-8">
-          <div className="w-16 h-16 bg-primary/20 text-primary rounded-full flex items-center justify-center mx-auto mb-2">
-            <User size={32} />
+      {/* Stripe texture only — no image */}
+      <div className="absolute inset-0 z-0 stripe-decoration opacity-30 pointer-events-none" />
+
+      {/* Glow blob */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-primary/8 blur-[100px] pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-sm z-10"
+      >
+        {/* Brand */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-4 pulse-glow">
+            <Scissors className="w-7 h-7 text-primary" />
           </div>
-          <h2 className="text-3xl font-display font-bold text-primary">Acceso Admin</h2>
-          <CardDescription className="text-zinc-400">
-            Inicia sesión para gestionar los turnos
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label className="text-zinc-300">Usuario</Label>
+          <h1
+            className="text-glow text-primary leading-none"
+            style={{ fontFamily: 'GraffityFont, sans-serif', fontSize: 'clamp(2.5rem, 8vw, 3.5rem)' }}
+          >
+            KANKI BARBER
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">Panel de administración</p>
+        </div>
+
+        {/* Card */}
+        <div className="kanki-card p-6 space-y-5">
+          <div>
+            <h2 className="text-xl font-display text-foreground">ACCESO STAFF</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Ingresá tus credenciales para continuar</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                Email / Usuario
+              </Label>
               <Input
+                id="email"
+                type="text"
+                autoComplete="username"
+                placeholder="admin@gmail.com"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="bg-zinc-950 border-zinc-800 focus:border-primary/50"
+                className="h-11 bg-black/40 border-border/60 focus:border-primary/60 text-foreground placeholder:text-muted-foreground/40"
               />
             </div>
-            <div className="space-y-2">
-              <Label className="text-zinc-300">Contraseña</Label>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                Contraseña
+              </Label>
               <Input
+                id="password"
                 type="password"
+                autoComplete="current-password"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-zinc-950 border-zinc-800 focus:border-primary/50"
+                className="h-11 bg-black/40 border-border/60 focus:border-primary/60 text-foreground placeholder:text-muted-foreground/40"
               />
             </div>
-            <Button 
-              type="submit" 
-              className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
-              disabled={isLoggingIn}
+
+            <button
+              type="submit"
+              disabled={isLoggingIn || !username || !password}
+              className="btn-lime w-full h-12 text-base disabled:opacity-40 disabled:shadow-none disabled:cursor-not-allowed mt-2"
             >
-              {isLoggingIn ? <Loader2 className="w-4 h-4 animate-spin" /> : "Iniciar Sesión"}
-            </Button>
+              {isLoggingIn ? (
+                <><Loader2 className="inline w-4 h-4 animate-spin mr-2" /> ENTRANDO...</>
+              ) : "INICIAR SESIÓN"}
+            </button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+
+        <p className="text-center text-xs text-muted-foreground/40 mt-6">
+          Solo personal autorizado
+        </p>
+      </motion.div>
     </div>
   );
 }
